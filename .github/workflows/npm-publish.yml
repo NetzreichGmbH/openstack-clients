@@ -16,8 +16,9 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+          scope: '@netzreich'
       - run: npm ci
       - run: npm run build
       - run: npm publish
         env:
-          NPM_TOKEN: ${{secrets.npm_token}}
+          NOTE_AUTH_TOKEN: ${{secrets.npm_token}}
