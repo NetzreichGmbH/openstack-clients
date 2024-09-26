@@ -1,0 +1,61 @@
+stages:
+  - generate
+
+
+
+generate-swagger:
+  stage: generate
+  image: python:3.12
+  script:
+    - echo "Installing dependencies..."
+    - git clone https://opendev.org/openstack/codegenerator
+    - cd codegenerator
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install -e .
+    - echo "Running spec generators..."
+    - git clone https://opendev.org/openstack/${SERVICE}
+    - pip install -c https://releases.openstack.org/constraints/upper/master -r ./${SERVICE}/requirements.txt        
+    - pip install -e ./${SERVICE}
+    - source ./.venv/bin/activate
+    - ls -la 
+    - ./.venv/bin/openstack-codegenerator --work-dir out --target openapi-spec --service-type ${TYPE} --validate
+  parallel:
+    matrix:
+      - SERVICE: nova
+        TYPE: compute
+        VERSION: v2
+  artifacts:
+    when: on_success
+    access: all
+    expire_in: "30 days"
+    name: ${SERVICE}-${TYPE}
+    paths:
+      - codegenerator/out/openapi-spec
+
+generate-client:
+  stage: generate
+  image: node:20
+  needs: ["generate-swagger"]
+  script:
+    - echo "Running generators..."
+    - cd codegenerator
+    - npm install @openapitools/openapi-generator-cli -g
+    - openapi-generator-cli generate \
+        -i ./out/${VERSION}.yaml \
+        -o ./out/clients/${TYPE} \
+        -g typescript-axios \
+        --skip-validate-spec \
+        --additional-properties=supportsES6=true
+  parallel:
+    matrix:
+      - SERVICE: nova
+        TYPE: compute
+        VERSION: v2
+  artifacts:
+    when: on_success
+    access: all
+    expire_in: "30 days"
+    name: ${SERVICE}-${TYPE}
+    paths:
+      - codegenerator/out/clients/${type}
