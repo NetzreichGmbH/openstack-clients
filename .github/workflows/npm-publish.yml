@@ -23,6 +23,6 @@ jobs:
       - run: npm run build
       - run: npm config list
       - run: cat $NPM_CONFIG_USERCONFIG
-      - run: npm publish --access public
+      - run: npm publish --provenance --access public
         env:
           NOTE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
