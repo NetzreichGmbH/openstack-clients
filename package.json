@@ -1,6 +1,6 @@
 {
   "name": "@netzreich/openstack-clients",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Openstack Client generated via OpenAPI Spec via openapi-generator",
   "main": "dist/index.js",
   "repository": {
