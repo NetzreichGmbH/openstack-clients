@@ -24,8 +24,6 @@ jobs:
           always-auth: true
       - run: npm ci
       - run: npm run build
-      - run: npm login
-      - run: cat $NPM_CONFIG_USERCONFIG
       - run: npm publish --provenance --access public
         env:
-          NOTE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
