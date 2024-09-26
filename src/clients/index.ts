@@ -3,12 +3,31 @@ import * as Network from "./network";
 import * as Identity from "./identity";
 import { BaseAPI } from "./identity/base";
 
+type ComputeType = ReturnType<typeof Compute.ExtensionsApiFactory> &
+  ReturnType<typeof Compute.OsSimpleTenantUsageApiFactory> &
+  ReturnType<typeof Compute.ServersApiFactory> &
+  ReturnType<typeof Compute.FlavorsApiFactory> &
+  ReturnType<typeof Compute.ImagesApiFactory> &
+  ReturnType<typeof Compute.OsKeypairsApiFactory>;
 
-
+type NetworkType = ReturnType<typeof Network.NetworksApiFactory> &
+  ReturnType<typeof Network.SubnetsApiFactory> &
+  ReturnType<typeof Network.PortsApiFactory> &
+  ReturnType<typeof Network.SecurityGroupsApiFactory> &
+  ReturnType<typeof Network.SecurityGroupRulesApiFactory> &
+  ReturnType<typeof Network.FloatingipPoolsApiFactory>;
+type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
+  ReturnType<typeof Identity.RolesApiFactory> &
+  ReturnType<typeof Identity.UsersApiFactory> &
+  ReturnType<typeof Identity.ProjectsApiFactory> &
+  ReturnType<typeof Identity.DomainsApiFactory> &
+  ReturnType<typeof Identity.ServicesApiFactory> &
+  ReturnType<typeof Identity.EndpointsApiFactory> &
+  ReturnType<typeof Identity.GroupsApiFactory>;
 export default class OpenStack {
-  Compute;
-  Identity;
-  Network;
+  Compute: ComputeType;
+  Identity: IdentityType;
+  Network: NetworkType;
 
   configuration: Identity.Configuration;
 
