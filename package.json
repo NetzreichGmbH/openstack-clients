@@ -1,6 +1,6 @@
 {
   "name": "@netzreich/openstack-clients",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Openstack Client generated via OpenAPI Spec via openapi-generator",
   "main": "dist/index.js",
   "repository": {
@@ -19,7 +19,8 @@
     "axios"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc src/clients/index.ts -d --lib ES2015 --outDir dist"
   },
   "author": "Philipp Bucher <bucher@netzreich.de>",
   "license": "MIT",
@@ -31,6 +32,6 @@
     "@openapitools/openapi-generator-cli": "2.13.9",
     "@types/node": "22.5.5",
     "tsconfig-paths": "4.2.0",
-    "typescript": "4.3.5"
+    "typescript": "5.6.2"
   }
 }
