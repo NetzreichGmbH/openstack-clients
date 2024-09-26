@@ -20,6 +20,7 @@ jobs:
           scope: '@netzreich'
       - run: npm ci
       - run: npm run build
+      - run: cat .npmrc
       - run: npm publish --access public
         env:
-          NOTE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NOTE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
