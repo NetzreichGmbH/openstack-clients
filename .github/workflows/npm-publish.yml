@@ -24,7 +24,7 @@ jobs:
           always-auth: true
       - run: npm ci
       - run: npm run build
-      - run: npm config list
+      - run: npm login
       - run: cat $NPM_CONFIG_USERCONFIG
       - run: npm publish --provenance --access public
         env:
