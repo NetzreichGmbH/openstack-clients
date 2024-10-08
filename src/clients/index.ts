@@ -25,13 +25,15 @@ type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
   ReturnType<typeof Identity.EndpointsApiFactory> &
   ReturnType<typeof Identity.GroupsApiFactory>;
 export default class OpenStack {
-  Compute: ComputeType;
-  Identity: IdentityType;
-  Network: NetworkType;
+  public Compute: ComputeType;
+  public Identity: IdentityType;
+  public Network: NetworkType;
 
-  configuration: Identity.Configuration;
+  private configuration: Identity.Configuration;
 
-  _token?: string;
+  private _token?: string;
+
+  private _catalog?: Identity.AuthCatalogGetResponseCatalogInner[];
 
   constructor(configuration: Identity.Configuration) {
     this.Identity = {
@@ -65,7 +67,7 @@ export default class OpenStack {
   }
 
 
-  authenticate(credentials: Identity.AuthTokensPostRequest): Promise<void> {
+  public authenticate(credentials: Identity.AuthTokensPostRequest): Promise<void> {
     return this.Identity.authTokensPost(credentials).then((res) => {
       const token = res.headers['x-subject-token'];
       this._token = token;
@@ -73,14 +75,25 @@ export default class OpenStack {
       if (!catalog) {
         throw new Error("No catalog found in response");
       }
-      this.initializeApi("compute", catalog);
-      this.initializeApi("network", catalog);
-      this.initializeApi("identity", catalog);
-
+      this._catalog = catalog;
+      this.initializeApis(catalog);
     });
   }
 
-  initializeApi(type: string,  catalog: Identity.AuthCatalogGetResponseCatalogInner[], entrypointInterface: string = "public") {
+  public switchEndpointInterface(interfaceName: string) {
+    if (!this._catalog) {
+      throw new Error("No catalog found in response");
+    }
+    this.initializeApis(this._catalog, interfaceName);
+  }
+
+  private initializeApis(catalog: Identity.AuthCatalogGetResponseCatalogInner[], entrypointInterface: string = "public") {
+    this.initializeApi("compute", catalog);
+    this.initializeApi("network", catalog);
+    this.initializeApi("identity", catalog);
+  }
+
+  private initializeApi(type: string,  catalog: Identity.AuthCatalogGetResponseCatalogInner[], entrypointInterface: string = "public") {
 
     const service = catalog.find((entry) => entry.type === type);
     if (!service || !service.endpoints) {
