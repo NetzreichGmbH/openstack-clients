@@ -88,9 +88,9 @@ export default class OpenStack {
   }
 
   private initializeApis(catalog: Identity.AuthCatalogGetResponseCatalogInner[], entrypointInterface: string = "public") {
-    this.initializeApi("compute", catalog);
-    this.initializeApi("network", catalog);
-    this.initializeApi("identity", catalog);
+    this.initializeApi("compute", catalog, entrypointInterface);
+    this.initializeApi("network", catalog, entrypointInterface);
+    this.initializeApi("identity", catalog, entrypointInterface);
   }
 
   private initializeApi(type: string,  catalog: Identity.AuthCatalogGetResponseCatalogInner[], entrypointInterface: string = "public") {
