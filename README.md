@@ -20,43 +20,43 @@ yarn add @netzreich/openstack-clients
 
 ### Identity
 
- - Auth
- - Roles
- - Users
- - Groups
- - Projects
- - Domains
- - Services
- - Endpoints
+- Auth
+- Roles
+- Users
+- Groups
+- Projects
+- Domains
+- Services
+- Endpoints
 
 ### Compute
 
- - Extensions
- - OsSimpleTenantUsage
- - Servers
- - Flavours
- - Images
- - OsKeypairs
+- Extensions
+- OsSimpleTenantUsage
+- Servers
+- Flavours
+- Images
+- OsKeypairs
 
 ### Network
 
- - Networks
- - Subnets
- - Ports
- - SecurityGroups
- - SecurityGroupsRules
- - FloatingipPool
+- Networks
+- Subnets
+- Ports
+- SecurityGroups
+- SecurityGroupsRules
+- FloatingipPool
 
-Missing an API? More APIs are available but not yet boostrapt in the Client. 
+Missing an API? More APIs are available but not yet boostrapt in the Client.
 
 ## Usage
 
 To use the OpenStack Clients package, you can import the desired client module and start making API calls. Here's an example:
 For most API endpoints you have to authenticate via username/password or application credentials using the `authenticate` method.
-Authentication will load the current service-catalog and apply the endpoints to the different clients via service discovery. Only the Keystone has to be configured in the initial config. 
-
+Authentication will load the current service-catalog and apply the endpoints to the different clients via service discovery. Only the Keystone has to be configured in the initial config.
 
 Import as ES Module
+
 ```javascript
 import OpenStack, { Identity } from "@netzreich/openstack-clients";
 import { AxiosError, AxiosResponse } from "axios";
@@ -72,32 +72,38 @@ const config = new Identity.Configuration({
   },
 });
 
-const client = new OpenStack(config);
-client
-  .authenticate({
-    auth: {
-      identity: {
-        methods: ["password"],
-        password: {
-          user: {
-            name: "{{USERNAME}}",
-            domain: { name: "{{DOMAINNAME}}" },
-            password: "{{PASSWORD}}",
-          },
-        },
-      },
-      scope: {
-        project: {
-          id: "{{PROJECT_ID}}",
+const client = new OpenStack(
+  config,
+  auth: {
+    identity: {
+      methods: ["password"],
+      password: {
+        user: {
+          name: "{{USERNAME}}",
           domain: { name: "{{DOMAINNAME}}" },
+          password: "{{PASSWORD}}",
         },
       },
     },
-  })
+    scope: {
+      project: {
+        id: "{{PROJECT_ID}}",
+        domain: { name: "{{DOMAINNAME}}" },
+      },
+    },
+  },
+  mylogger // should implement LoggerInterface
+);
+client
+  .authenticate( // this is all default
+    undefined, //this re-uses the creds from before
+    true,
+    60 * 1000,
+    1000
+  ) // this will re-auth 5 minutes before token expires and retry auth if auth fails or targets timeouts after 1s
   .then(() => {
     console.log("Authenticated")
-
-    client.Network.networksGet()
+    client.Compute.serversGet()
       .then((res: AxiosResponse) => {
         console.log(res.data);
       })
