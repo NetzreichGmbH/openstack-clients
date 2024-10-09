@@ -133,14 +133,14 @@ export default class OpenStack {
           setTimeout(() => {
             this.logger.log("Re-authenticating");
             this.authenticate(credentials).catch((error) => {
-              this.logger.error("Failed to re-authenticate after token expired:", error.message);
+              this.logger.error(`Failed to re-authenticate after token expired: ${error.message}`);
             });
           }, rescheduleTime);
         }
       }
       return authResponse.data;
     } catch (e: any) {
-      this.logger.error("Failed to authenticate:", e.message);
+      this.logger.error(`Failed to authenticate: ${e.message}`);
       if (retryOnError) {
         this.logger.log(`Retrying in ${retryInterval}ms`);
         if (this._retry) {
@@ -150,7 +150,7 @@ export default class OpenStack {
         this._retry = setTimeout(() => {
           this.logger.log("Retrying authentication");
           this.authenticate(credentials, retryOnError, retryInterval, timeout).catch((error) => {
-            this.logger.error("Failed to re-authenticate after Error:", e.message);
+            this.logger.error(`Failed to re-authenticate after Error: ${e.message}`);
           });
         }, retryInterval); // Retry in 1 minute
       }
