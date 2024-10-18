@@ -26,7 +26,8 @@ type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
   ReturnType<typeof Identity.DomainsApiFactory> &
   ReturnType<typeof Identity.ServicesApiFactory> &
   ReturnType<typeof Identity.EndpointsApiFactory> &
-  ReturnType<typeof Identity.GroupsApiFactory>;
+  ReturnType<typeof Identity.GroupsApiFactory> &
+  ReturnType<typeof Identity.RoleAssignmentsApiFactory>;
 export default class OpenStack {
   public Compute: ComputeType;
   public Identity: IdentityType;
