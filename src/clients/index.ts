@@ -50,6 +50,7 @@ export default class OpenStack {
     this.Identity = {
       ...Identity.AuthApiFactory(configuration),
       ...Identity.RolesApiFactory(configuration),
+      ...Identity.RoleAssignmentsApiFactory(configuration),
       ...Identity.UsersApiFactory(configuration),
       ...Identity.ProjectsApiFactory(configuration),
       ...Identity.DomainsApiFactory(configuration),
@@ -230,6 +231,7 @@ export default class OpenStack {
         ...Identity.AuthApiFactory(config),
         ...Identity.RolesApiFactory(config),
         ...Identity.UsersApiFactory(config),
+        ...Identity.RoleAssignmentsApiFactory(config),
         ...Identity.ProjectsApiFactory(config),
         ...Identity.DomainsApiFactory(config),
         ...Identity.ServicesApiFactory(config),
