@@ -18,7 +18,9 @@ type NetworkType = ReturnType<typeof Network.NetworksApiFactory> &
   ReturnType<typeof Network.PortsApiFactory> &
   ReturnType<typeof Network.SecurityGroupsApiFactory> &
   ReturnType<typeof Network.SecurityGroupRulesApiFactory> &
-  ReturnType<typeof Network.FloatingipPoolsApiFactory>;
+  ReturnType<typeof Network.FloatingipPoolsApiFactory> &
+  ReturnType<typeof Network.QosApiFactory>;
+
 type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
   ReturnType<typeof Identity.RolesApiFactory> &
   ReturnType<typeof Identity.UsersApiFactory> &
@@ -75,6 +77,7 @@ export default class OpenStack {
       ...Network.SecurityGroupsApiFactory(configuration),
       ...Network.SecurityGroupRulesApiFactory(configuration),
       ...Network.FloatingipPoolsApiFactory(configuration),
+      ...Network.QosApiFactory(configuration),
     };
   }
 
@@ -225,6 +228,7 @@ export default class OpenStack {
         ...Network.SecurityGroupsApiFactory(config),
         ...Network.SecurityGroupRulesApiFactory(config),
         ...Network.FloatingipPoolsApiFactory(config),
+        ...Network.QosApiFactory(config),
       };
     }
     if (type === "identity") {
