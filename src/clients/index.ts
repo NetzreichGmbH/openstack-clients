@@ -78,6 +78,8 @@ export default class OpenStack {
       ...Network.SecurityGroupRulesApiFactory(configuration),
       ...Network.FloatingipPoolsApiFactory(configuration),
       ...Network.QosApiFactory(configuration),
+      ...Network.RoutersApiFactory(configuration),
+
     };
   }
 
@@ -229,6 +231,7 @@ export default class OpenStack {
         ...Network.SecurityGroupRulesApiFactory(config),
         ...Network.FloatingipPoolsApiFactory(config),
         ...Network.QosApiFactory(config),
+        ...Network.RoutersApiFactory(config),
       };
     }
     if (type === "identity") {
