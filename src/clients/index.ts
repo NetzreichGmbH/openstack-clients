@@ -19,7 +19,8 @@ type NetworkType = ReturnType<typeof Network.NetworksApiFactory> &
   ReturnType<typeof Network.SecurityGroupsApiFactory> &
   ReturnType<typeof Network.SecurityGroupRulesApiFactory> &
   ReturnType<typeof Network.FloatingipPoolsApiFactory> &
-  ReturnType<typeof Network.QosApiFactory>;
+  ReturnType<typeof Network.QosApiFactory> &
+  ReturnType<typeof Network.RoutersApiFactory>;
 
 type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
   ReturnType<typeof Identity.RolesApiFactory> &
