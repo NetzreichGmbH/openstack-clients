@@ -31,6 +31,12 @@ type IdentityType = ReturnType<typeof Identity.AuthApiFactory> &
   ReturnType<typeof Identity.EndpointsApiFactory> &
   ReturnType<typeof Identity.GroupsApiFactory> &
   ReturnType<typeof Identity.RoleAssignmentsApiFactory>;
+
+function removeVersionFromPath(path: string = ""): string {
+  // Regex zum Entfernen der Version und des letzten Slashes
+  return path.replace(/\/v[\d.]+$/, "");
+}
+
 export default class OpenStack {
   public Compute: ComputeType;
   public Identity: IdentityType;
@@ -80,7 +86,6 @@ export default class OpenStack {
       ...Network.FloatingipPoolsApiFactory(configuration),
       ...Network.QosApiFactory(configuration),
       ...Network.RoutersApiFactory(configuration),
-
     };
   }
 
@@ -99,7 +104,7 @@ export default class OpenStack {
     }
     try {
       const authResponse = await this.Identity.authTokensPost(credentials, {
-        timeout // fail fast and retry instead
+        timeout, // fail fast and retry instead
       });
       const token = authResponse.headers["x-subject-token"];
       this._token = token;
@@ -129,19 +134,21 @@ export default class OpenStack {
         const rescheduleTime = timeUntilExpiration - 5 * 60 * 1000; // 5 minutes before expiration
 
         if (rescheduleTime > 0) {
-            const rescheduleTimeInSeconds = Math.floor(rescheduleTime / 1000);
-            const hours = Math.floor(rescheduleTimeInSeconds / 3600);
-            const minutes = Math.floor((rescheduleTimeInSeconds % 3600) / 60);
-            const seconds = rescheduleTimeInSeconds % 60;
+          const rescheduleTimeInSeconds = Math.floor(rescheduleTime / 1000);
+          const hours = Math.floor(rescheduleTimeInSeconds / 3600);
+          const minutes = Math.floor((rescheduleTimeInSeconds % 3600) / 60);
+          const seconds = rescheduleTimeInSeconds % 60;
 
-            this.logger.log(
+          this.logger.log(
             "Rescheduling authentication in ",
             `${hours}h ${minutes}m ${seconds}s`
-            );
+          );
           setTimeout(() => {
             this.logger.log("Re-authenticating");
             this.authenticate(credentials).catch((error) => {
-              this.logger.error(`Failed to re-authenticate after token expired: ${error.message}`);
+              this.logger.error(
+                `Failed to re-authenticate after token expired: ${error.message}`
+              );
             });
           }, rescheduleTime);
         }
@@ -157,8 +164,15 @@ export default class OpenStack {
         }
         this._retry = setTimeout(() => {
           this.logger.log("Retrying authentication");
-          this.authenticate(credentials, retryOnError, retryInterval, timeout).catch((error) => {
-            this.logger.error(`Failed to re-authenticate after Error: ${e.message}`);
+          this.authenticate(
+            credentials,
+            retryOnError,
+            retryInterval,
+            timeout
+          ).catch((error) => {
+            this.logger.error(
+              `Failed to re-authenticate after Error: ${e.message}`
+            );
           });
         }, retryInterval); // Retry in 1 minute
       }
@@ -209,7 +223,9 @@ export default class OpenStack {
       ...this.configuration,
     });
 
-    config.basePath = `${parsedUrl.protocol}//${parsedUrl.host}`;
+    config.basePath = `${parsedUrl.protocol}//${
+      parsedUrl.host
+    }${removeVersionFromPath(parsedUrl.pathname)}`;
     config.baseOptions.headers["X-Auth-Token"] = this._token;
 
     if (type === "compute") {
