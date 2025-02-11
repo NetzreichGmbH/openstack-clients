@@ -52,6 +52,10 @@ export default class OpenStack {
 
   private _retry: ReturnType<typeof setTimeout> | undefined;
 
+  public isAuthenticated = false;
+
+  firsTime = true;
+
   constructor(
     configuration: Identity.Configuration,
     private _auth: Identity.AuthTokensPostRequest,
@@ -87,6 +91,54 @@ export default class OpenStack {
       ...Network.QosApiFactory(configuration),
       ...Network.RoutersApiFactory(configuration),
     };
+
+    setInterval(() => {
+      if (this.isTokenExpired()) {
+        this.authenticate(this._auth, false, 1000);
+      }
+    }, 1000 * 10);
+  }
+
+  private async _authenticate(
+    credentials: Identity.AuthTokensPostRequest = this._auth,
+    timeout = 1000
+  ) {
+    const authResponse = await this.Identity.authTokensPost(credentials, {
+      timeout, // fail fast and retry instead
+    });
+    const token = authResponse.headers["x-subject-token"];
+    this._token = token;
+    const catalog = authResponse.data.token?.catalog;
+
+    if (!catalog) {
+      this.logger.error("No catalog found in response");
+      throw new Error("No catalog found in response");
+    }
+    if (authResponse.data.token?.expires_at) {
+      this.logger.log("New Token expires at: ", authResponse.data.token.expires_at);
+      this.expires_at = new Date(authResponse.data.token.expires_at);
+    }
+    if (authResponse.data.token?.expires_at === null) {
+      // null means token never expires
+      this.expires_at = new Date(
+        new Date().setFullYear(new Date().getFullYear() + 100)
+      );
+    }
+    this._catalog = catalog;
+    this.initializeApis(catalog);
+    this.isAuthenticated = true;
+    return authResponse;
+  }
+
+  isTokenExpired(): boolean {
+    if (
+      this._token &&
+      this.expires_at &&
+      !(this.expires_at.getTime() < new Date().getTime())
+    ) {
+      return false;
+    }
+    return true;
   }
 
   public async authenticate(
@@ -95,86 +147,22 @@ export default class OpenStack {
     retryInterval = 60 * 1000,
     timeout = 1000
   ): Promise<Identity.AuthTokensPostResponse | void> {
-    if (
-      this.expires_at &&
-      !(this.expires_at.getTime() < new Date().getTime())
-    ) {
-      this.logger.log("Token is still valid - doing nothing");
-      return void 0;
-    }
     try {
-      const authResponse = await this.Identity.authTokensPost(credentials, {
-        timeout, // fail fast and retry instead
-      });
-      const token = authResponse.headers["x-subject-token"];
-      this._token = token;
-      const catalog = authResponse.data.token?.catalog;
-      if (!catalog) {
-        this.logger.error("No catalog found in response");
-        throw new Error("No catalog found in response");
-      }
-      if (authResponse.data.token?.expires_at) {
-        this.logger.log(
-          "Token expires at: ",
-          authResponse.data.token.expires_at
-        );
-        this.expires_at = new Date(authResponse.data.token.expires_at);
-      }
-      if (authResponse.data.token?.expires_at === null) {
-        // null means token never expires
-        this.expires_at = new Date(
-          new Date().setFullYear(new Date().getFullYear() + 100)
+
+      if (this.isTokenExpired()) {
+        this.logger.log("Token expired - authenticating");
+        return this._authenticate(credentials, timeout).then(
+          (resp) => resp.data
         );
       }
-      this._catalog = catalog;
-      this.initializeApis(catalog);
-      if (this.expires_at) {
-        const now = new Date();
-        const timeUntilExpiration = this.expires_at.getTime() - now.getTime();
-        const rescheduleTime = timeUntilExpiration - 5 * 60 * 1000; // 5 minutes before expiration
-
-        if (rescheduleTime > 0) {
-          const rescheduleTimeInSeconds = Math.floor(rescheduleTime / 1000);
-          const hours = Math.floor(rescheduleTimeInSeconds / 3600);
-          const minutes = Math.floor((rescheduleTimeInSeconds % 3600) / 60);
-          const seconds = rescheduleTimeInSeconds % 60;
-
-          this.logger.log(
-            "Rescheduling authentication in ",
-            `${hours}h ${minutes}m ${seconds}s`
-          );
-          setTimeout(() => {
-            this.logger.log("Re-authenticating");
-            this.authenticate(credentials).catch((error) => {
-              this.logger.error(
-                `Failed to re-authenticate after token expired: ${error.message}`
-              );
-            });
-          }, rescheduleTime);
-        }
-      }
-      return authResponse.data;
+      return void 0;
     } catch (e: any) {
+      this.isAuthenticated = false;
+      this._token = undefined;
+      this.expires_at = undefined;
       this.logger.error(`Failed to authenticate: ${e.message}`);
       if (retryOnError) {
-        this.logger.log(`Retrying in ${retryInterval}ms`);
-        if (this._retry) {
-          clearTimeout(this._retry);
-          this._retry = undefined;
-        }
-        this._retry = setTimeout(() => {
-          this.logger.log("Retrying authentication");
-          this.authenticate(
-            credentials,
-            retryOnError,
-            retryInterval,
-            timeout
-          ).catch((error) => {
-            this.logger.error(
-              `Failed to re-authenticate after Error: ${e.message}`
-            );
-          });
-        }, retryInterval); // Retry in 1 minute
+        this.logger.log(`Retrying every 10s`);
       }
       throw e;
     }
