@@ -94,7 +94,9 @@ export default class OpenStack {
 
     setInterval(() => {
       if (this.isTokenExpired()) {
-        this.authenticate(this._auth, false, 1000);
+        this.authenticate(this._auth, false, 1000).catch((e) => {
+          this.logger.error(e.message)
+        });
       }
     }, 1000 * 10);
   }
@@ -115,7 +117,10 @@ export default class OpenStack {
       throw new Error("No catalog found in response");
     }
     if (authResponse.data.token?.expires_at) {
-      this.logger.log("New Token expires at: ", authResponse.data.token.expires_at);
+      this.logger.log(
+        "New Token expires at: ",
+        authResponse.data.token.expires_at
+      );
       this.expires_at = new Date(authResponse.data.token.expires_at);
     }
     if (authResponse.data.token?.expires_at === null) {
@@ -148,12 +153,14 @@ export default class OpenStack {
     timeout = 1000
   ): Promise<Identity.AuthTokensPostResponse | void> {
     try {
-
       if (this.isTokenExpired()) {
         this.logger.log("Token expired - authenticating");
-        return this._authenticate(credentials, timeout).then(
-          (resp) => resp.data
-        );
+        return this._authenticate(credentials, timeout)
+          .then((resp) => resp.data)
+          .catch((e) => {
+            this.logger.error(e.message)
+            return Promise.reject(e);
+          });
       }
       return void 0;
     } catch (e: any) {
